@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<title>منصة إدارة وتبادل الحسابات</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Cairo',sans-serif;background:#0f172a;color:#f8fafc}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:#1e293b}::-webkit-scrollbar-thumb{background:#475569;border-radius:4px}
+.glass-card{background:rgba(30,41,59,.7);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.08)}
+button:disabled{opacity:.55;cursor:not-allowed}
+</style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+<div id="toastContainer" class="fixed top-5 right-5 z-[99999] flex flex-col gap-3 max-w-sm w-full"></div>
+
+<!-- Auth -->
+<div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+<div class="glass-card w-full max-w-md p-8 rounded-2xl shadow-2xl relative">
+<div class="text-center space-y-2 mb-6">
+<div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600/20 text-indigo-400 mb-2 border border-indigo-500/30"><i class="fa-solid fa-user-shield text-3xl"></i></div>
+<h2 id="authTitle" class="text-2xl font-bold text-white">تسجيل الدخول</h2>
+<p id="authDescription" class="text-sm text-slate-400">أدخل بريدك الإلكتروني وكلمة المرور.</p>
+</div>
+<form id="authForm" class="space-y-4">
+<div><label for="loginEmail" class="block text-sm font-medium text-slate-300 mb-1.5">البريد الإلكتروني</label>
+<input type="email" id="loginEmail" required autocomplete="email" placeholder="name@example.com" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-indigo-500 text-sm"></div>
+<div><label for="loginPassword" class="block text-sm font-medium text-slate-300 mb-1.5">كلمة المرور</label>
+<input type="password" id="loginPassword" required minlength="6" autocomplete="current-password" placeholder="6 أحرف على الأقل" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-indigo-500 text-sm"></div>
+<div id="keyWrap" class="hidden"><label for="loginKey" class="block text-sm font-medium text-slate-300 mb-1.5">مفتاح التفعيل (Key)</label>
+<input type="text" id="loginKey" autocomplete="off" spellcheck="false" dir="ltr" maxlength="40" placeholder="xxxxx-xxxx-xxxx-xxxxx-xxx" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-indigo-500 text-sm font-mono">
+<p class="text-[11px] text-slate-500 mt-1">المفتاح يُربط بإيميلك بعد التسجيل ولا يمكن استخدامه من حساب آخر.</p></div>
+<div class="flex justify-between items-center text-xs">
+<button type="button" id="resendVerificationBtn" class="text-indigo-400 hover:underline">إعادة إرسال رابط التفعيل؟</button>
+<button type="button" id="forgotPasswordBtn" class="text-slate-400 hover:text-indigo-400 transition">نسيت كلمة المرور؟</button>
+</div>
+<button type="submit" id="authSubmitBtn" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg transition">تسجيل الدخول</button>
+<button type="button" id="toggleAuthMode" class="w-full py-2 text-sm text-indigo-300 hover:text-white transition">ما عندك حساب؟ إنشاء حساب جديد</button>
+</form>
+</div>
+</div>
+
+<!-- App -->
+<div id="appContainer" class="hidden min-h-screen flex flex-col">
+<header class="glass-card sticky top-0 z-40 border-b border-slate-800">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white text-xl shadow-md"><i class="fa-solid fa-key"></i></div>
+<div><h1 class="text-lg font-bold text-white leading-none">zzx</h1><span id="roleBadge" class="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-semibold">مستخدم</span></div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-sm"><i class="fa-solid fa-circle-user text-indigo-400"></i><span id="currentUserEmailDisplay" class="text-slate-300 font-medium"></span></div>
+<button onclick="handleLogout()" class="px-3.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-sm font-medium transition flex items-center gap-1.5"><i class="fa-solid fa-right-from-bracket"></i><span>خروج</span></button>
+</div>
+</div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
+<div class="glass-card p-4 rounded-2xl border border-indigo-500/30 bg-indigo-500/5 flex items-center justify-between">
+<div class="flex items-center gap-3"><i class="fa-solid fa-shield-halved text-indigo-400 text-xl"></i><div><h3 class="text-sm font-bold text-white">الحد اليومي لسحب الحسابات</h3><p class="text-xs text-slate-400">يتجدد الحد كل 24 ساعة تلقائياً. التجديد بعد: <span id="myCountdown" dir="ltr" class="font-mono text-indigo-300">—</span></p></div></div>
+<div class="text-left" dir="ltr"><span id="dailyClaimCount" class="text-xl font-black text-indigo-400">0</span><span id="dailyClaimMax" class="text-sm font-bold text-slate-400"> / 30</span></div>
+</div>
+
+<section class="admin-only hidden">
+<h2 class="text-xl font-bold text-white flex items-center gap-2 mb-4"><i class="fa-solid fa-chart-pie text-indigo-400"></i><span>إحصائيات المنصة (المالك)</span></h2>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+<div class="glass-card p-4 rounded-2xl"><p class="text-xs text-slate-400 mb-1">إجمالي الحسابات</p><p id="statTotal" class="text-2xl font-black text-white">0</p></div>
+<div class="glass-card p-4 rounded-2xl border-emerald-500/20"><p class="text-xs text-emerald-400 mb-1">المتاحة</p><p id="statAvailable" class="text-2xl font-black text-emerald-400">0</p></div>
+<div class="glass-card p-4 rounded-2xl border-purple-500/20"><p class="text-xs text-purple-400 mb-1">المستخدمة</p><p id="statClaimed" class="text-2xl font-black text-purple-400">0</p></div>
+<div class="glass-card p-4 rounded-2xl"><p class="text-xs text-indigo-400 mb-1">دسكورد</p><p id="statDiscord" class="text-2xl font-black text-indigo-300">0</p></div>
+<div class="glass-card p-4 rounded-2xl"><p class="text-xs text-amber-400 mb-1">روكستار</p><p id="statRockstar" class="text-2xl font-black text-amber-300">0</p></div>
+<div class="glass-card p-4 rounded-2xl"><p class="text-xs text-slate-300 mb-1">ستيم</p><p id="statSteam" class="text-2xl font-black text-slate-200">0</p></div>
+</div>
+</section>
+
+<section class="admin-only hidden glass-card p-6 rounded-2xl">
+<div class="flex items-center gap-2 mb-4"><div class="p-2 bg-indigo-500/10 rounded-lg text-indigo-400"><i class="fa-solid fa-plus-circle text-lg"></i></div><div><h2 class="text-lg font-bold text-white">إضافة حساب جديد (خاص بالمالك)</h2><p class="text-xs text-slate-400">قم بإضافة بيانات الحساب المتاح وتحديد منصته</p></div></div>
+<form onsubmit="handleAddAccount(event)" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+<div class="md:col-span-6"><label for="accCredentials" class="block text-xs text-slate-300 mb-1">بيانات الحساب (الإيميل:الباسورد)</label><input type="text" id="accCredentials" required placeholder="مثال: user@mail.com:password123" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"></div>
+<div class="md:col-span-4"><label for="accPlatform" class="block text-xs text-slate-300 mb-1">نوع المنصة</label><select id="accPlatform" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"><option value="discord">دسكورد (Discord)</option><option value="rockstar">روكستار (Rockstar)</option><option value="steam">ستيم (Steam)</option></select></div>
+<div class="md:col-span-2 flex items-end"><button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg transition flex items-center justify-center gap-2"><i class="fa-solid fa-plus text-xs"></i><span>حفظ الحساب</span></button></div>
+</form>
+</section>
+
+<section class="admin-only hidden glass-card p-6 rounded-2xl space-y-4">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div class="flex items-center gap-2"><div class="p-2 bg-emerald-500/10 rounded-lg text-emerald-400"><i class="fa-solid fa-key text-lg"></i></div><div><h2 class="text-lg font-bold text-white">القائمة الثانية: مفاتيح التسجيل (Keys)</h2><p class="text-xs text-slate-400">كل مفتاح يُستخدم مرة واحدة فقط ويرتبط بإيميل صاحبه <span id="keysCount" class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">0</span></p></div></div>
+<button type="button" data-act="gen-key" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl shadow-lg transition flex items-center justify-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-xs"></i><span>توليد كي جديد</span></button>
+</div>
+<div id="keysList" class="space-y-2 min-h-[100px] max-h-[320px] overflow-y-auto pr-1"></div>
+</section>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<div class="lg:col-span-7 space-y-6">
+<div class="admin-only hidden glass-card p-6 rounded-2xl space-y-4">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><h2 class="text-lg font-bold text-white">القائمة الأولى: الحسابات المتاحة (خاص بالمالك)</h2>
+<div class="flex bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+<button onclick="switchTab('discord')" id="tab-discord" class="px-3 py-1.5 rounded-lg text-xs font-semibold">دسكورد</button>
+<button onclick="switchTab('rockstar')" id="tab-rockstar" class="px-3 py-1.5 rounded-lg text-xs font-semibold">روكستار</button>
+<button onclick="switchTab('steam')" id="tab-steam" class="px-3 py-1.5 rounded-lg text-xs font-semibold">ستيم</button>
+</div></div>
+<div id="tabContentList" class="space-y-3 min-h-[180px] max-h-[400px] overflow-y-auto"></div>
+</div>
+<div class="glass-card p-6 rounded-2xl space-y-4"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-download text-emerald-400"></i><span>سحب واستلام الحسابات</span></h2><p class="text-xs text-slate-400">اختر المنصة وسيتم سحب حساب لك عشوائياً ونسخ الإيميل والباسورد.</p><div id="claimAccountsList" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div></div>
+</div>
+<div class="lg:col-span-5"><div class="glass-card p-6 rounded-2xl space-y-4 h-full flex flex-col">
+<div class="flex items-center justify-between border-b border-slate-800 pb-3"><h2 class="text-lg font-bold text-white">القائمة الثالثة: الحسابات المستلمة</h2><span id="claimedBadgeCount" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300">0</span></div>
+<div id="claimedFilters" class="flex flex-wrap gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800"></div>
+<div id="claimedHistoryList" class="space-y-3 flex-1 overflow-y-auto max-h-[550px] pr-1"></div>
+</div></div>
+</div>
+
+<section class="admin-only hidden glass-card p-6 rounded-2xl space-y-4">
+<h2 class="text-lg font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3"><i class="fa-solid fa-users-gear text-indigo-400"></i><span>القائمة الرابعة: إدارة المستخدمين والصلاحيات (المالك)</span></h2>
+<div id="usersListContainer" class="space-y-3 max-h-[400px] overflow-y-auto pr-1"></div>
+</section>
+</main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, doc, updateDoc, onSnapshot, getDoc, setDoc, writeBatch, deleteField, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signOut, onAuthStateChanged, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+const app = initializeApp({
+    apiKey: "AIzaSyCAgjvJT6o3ZTFrhAuXiEV6V3ucW_JgaDY",
+    authDomain: "zzzx-684fb.firebaseapp.com",
+    projectId: "zzzx-684fb",
+    storageBucket: "zzzx-684fb.firebasestorage.app",
+    messagingSenderId: "575709545954",
+    appId: "1:575709545954:web:b2e9b532148175c1b1e5bb",
+    measurementId: "G-Z03B5ND06F"
+});
+const db = getFirestore(app), auth = getAuth(app);
+auth.languageCode = 'ar';
+
+const MASTER_ADMIN_EMAIL = "mohammed114324@gmail.com";
+const DAY = 864e5;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// الحالة (داخل الوحدة فقط، غير متاحة من الـ Console)
+let userEmail = null, me = null, isAdmin = false, isOwner = false, tab = 'discord';
+let accounts = [], usersList = [], secrets = {}, keys = [];
+let mode = 'login', busy = false;
+let claimedFilter = 'all';
+let unsubs = [];
+
+const PLAT = {
+    discord:  { label: 'دسكورد', icon: 'fa-brands fa-discord', badge: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', btn: 'bg-indigo-500/10 hover:bg-indigo-500 text-indigo-300 hover:text-white border-indigo-500/30' },
+    rockstar: { label: 'روكستار', icon: 'fa-solid fa-r', badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20', btn: 'bg-amber-500/10 hover:bg-amber-500 text-amber-300 hover:text-black border-amber-500/30' },
+    steam:    { label: 'ستيم', icon: 'fa-brands fa-steam', badge: 'bg-slate-700/50 text-slate-300 border-slate-600/30', btn: 'bg-slate-700/40 hover:bg-slate-600 text-slate-200 border-slate-600/40' }
+};
+const badge = (p) => PLAT[p] ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border ${PLAT[p].badge}"><i class="${PLAT[p].icon}"></i> ${PLAT[p].label}</span>` : '';
+const empty = (t) => `<div class="text-center py-8 border border-dashed border-slate-800 rounded-xl"><p class="text-xs text-slate-500">${t}</p></div>`;
+
+const ERRORS = {
+    'app/bad-key': 'صيغة المفتاح غير صحيحة. مثال: zzxgn-dww2-2512-2fzas-wdd',
+    'app/key-rejected': 'المفتاح غير صالح أو مستخدم مسبقاً من حساب آخر. لم يتم إنشاء الحساب.',
+    'app/no-profile': 'حسابك غير مرتبط بمفتاح تفعيل. تواصل مع المالك.',
+    'app/locked': 'محاولات خاطئة كثيرة. انتظر 5 دقائق ثم حاول مرة أخرى.',
+    'auth/email-already-in-use': 'هذا البريد مسجل مسبقاً. سجّل الدخول بدلاً من إنشاء حساب جديد.',
+    'auth/invalid-email': 'صيغة البريد الإلكتروني غير صحيحة.',
+    'auth/invalid-credential': 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
+    'auth/user-not-found': 'لا يوجد حساب بهذا البريد الإلكتروني.',
+    'auth/wrong-password': 'كلمة المرور غير صحيحة.',
+    'auth/weak-password': 'كلمة المرور ضعيفة. استخدم 6 أحرف على الأقل.',
+    'auth/operation-not-allowed': 'تسجيل الدخول بالبريد وكلمة المرور غير مفعّل في Firebase Authentication.',
+    'auth/unauthorized-domain': 'نطاق الموقع غير مسموح به. أضفه في Authentication ثم Authorized domains.',
+    'auth/network-request-failed': 'تعذر الاتصال بخدمات Firebase. تحقق من الإنترنت.',
+    'auth/too-many-requests': 'تكررت المحاولات كثيراً. انتظر قليلاً ثم حاول مرة أخرى.',
+    'unavailable': 'خدمة Firestore غير متاحة مؤقتاً. حاول مجدداً.'
+};
+function errorMessage(err) {
+    const code = err?.code ? String(err.code) : '';
+    if (ERRORS[code]) return ERRORS[code];
+    if (code.includes('permission-denied')) return 'رفضت قواعد Firestore العملية. راجع Firestore ثم Rules.';
+    return `${code ? code + ': ' : ''}${err?.message || 'حدث خطأ غير معروف.'}`;
+}
+
+function showToast(message, type = 'info') {
+    const colors = { success: 'bg-emerald-900/90 border-emerald-500/50 text-emerald-200', error: 'bg-rose-900/90 border-rose-500/50 text-rose-200', info: 'bg-slate-800 border-slate-700 text-white' };
+    const t = document.createElement('div');
+    t.className = `p-3.5 rounded-xl border shadow-xl text-xs font-semibold flex items-center justify-between gap-3 ${colors[type] || colors.info}`;
+    const s = document.createElement('span'); s.textContent = String(message);
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'fa-solid fa-xmark opacity-70 hover:opacity-100 mr-2';
+    x.addEventListener('click', () => t.remove());
+    t.append(s, x);
+    $('toastContainer').appendChild(t);
+    setTimeout(() => t.remove(), 7000);
+}
+
+async function copyText(v, toast = true, msg = 'تم نسخ البيانات للحافظة بنجاح!') {
+    try { await navigator.clipboard.writeText(String(v)); if (toast) showToast(msg, 'success'); return true; }
+    catch (e) { console.error('Clipboard error:', e); showToast('تعذر النسخ التلقائي. تأكد أن الموقع يعمل عبر HTTPS أو localhost.', 'error'); return false; }
+}
+
+// ---------- أدوات بيانات الحساب (الإيميل + الباسورد) ----------
+function getCred(a) { return (a && (secrets[a.id] || a.credentials)) || ''; }
+
+function parseCred(raw) {
+    raw = String(raw || '').trim();
+    const em = raw.match(/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i);
+    if (em) {
+        const pw = raw.match(/pass(?:word)?\s*[:=]\s*([^\s|]+)/i);
+        let pass = pw ? pw[1] : '';
+        if (!pass) {
+            const after = raw.slice(em.index + em[0].length).match(/^\s*[:|;]\s*([^\s|]+)/);
+            pass = after ? after[1] : '';
+        }
+        return { email: em[0], pass };
+    }
+    const m = raw.match(/^(.*?)\s*[:|;]\s*(.*)$/s);
+    return m ? { email: m[1].trim(), pass: m[2].trim() } : { email: raw, pass: '' };
+}
+function formatCred(raw) { return String(raw || '').trim(); }
+
+// ---------- المفاتيح (Keys) ----------
+const KEY_RE = /^[a-z0-9]{5}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{5}-[a-z0-9]{3}$/;
+const normKey = (s) => String(s || '').trim().toLowerCase();
+function randKey() {
+    const cs = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const pick = (n) => {
+        let s = '';
+        while (s.length < n) {
+            for (const b of crypto.getRandomValues(new Uint8Array(n * 2))) { if (b < 252 && s.length < n) s += cs[b % 36]; } // بدون انحياز
+        }
+        return s;
+    };
+    return [5, 4, 4, 5, 3].map(pick).join('-');
+}
+async function generateKey() {
+    if (!isAdmin) return;
+    const k = randKey();
+    try {
+        await setDoc(doc(db, 'keys', k), { usedBy: null, usedByUid: null, createdAt: new Date().toISOString(), createdBy: userEmail });
+        await copyText(k, false);
+        showToast('تم توليد مفتاح جديد ونسخه: ' + k, 'success');
+    } catch (err) { console.error('GenKey:', err.code); showToast('تعذر توليد المفتاح: ' + errorMessage(err), 'error'); }
+}
+async function deleteKey(id) {
+    if (!isAdmin) return;
+    const k = keys.find((x) => x.id === id);
+    if (!confirm(k?.usedBy ? 'هذا المفتاح مستخدم من ' + k.usedBy + '. حذفه لن يحذف حساب المستخدم. متأكد؟' : 'حذف هذا المفتاح؟')) return;
+    try { await deleteDoc(doc(db, 'keys', id)); showToast('تم حذف المفتاح', 'info'); }
+    catch (err) { showToast('تعذر حذف المفتاح: ' + errorMessage(err), 'error'); }
+}
+function renderKeys() {
+    if (!isAdmin) return;
+    const list = [...keys].sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    $('keysCount').textContent = list.length;
+    $('keysList').innerHTML = list.length ? list.map((k) => `
+        <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+                <p class="font-mono text-xs text-slate-200 break-all" dir="ltr" style="text-align:left">${esc(k.id)}</p>
+                <p class="text-[11px] mt-0.5 ${k.usedBy ? 'text-purple-400' : 'text-emerald-400'}">${k.usedBy ? 'مربوط بـ: ' + esc(k.usedBy) : 'غير مستخدم'}</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" data-act="copy-key" data-id="${esc(k.id)}" title="نسخ المفتاح" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition"><i class="fa-regular fa-copy text-sm"></i></button>
+                <button type="button" data-act="del-key" data-id="${esc(k.id)}" title="حذف" class="p-2 hover:bg-red-500/10 rounded-lg text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash text-sm"></i></button>
+            </div>
+        </div>`).join('') : empty('لا توجد مفاتيح بعد. اضغط «توليد كي جديد»');
+}
+
+// ---------- حماية من تخمين كلمة المرور (طبقة إضافية فوق حماية Firebase) ----------
+const LK = 'zzx_lock';
+const lockInfo = () => { try { return JSON.parse(localStorage.getItem(LK)) || { n: 0, until: 0 }; } catch { return { n: 0, until: 0 }; } };
+const lockLeft = () => Math.max(0, (lockInfo().until || 0) - Date.now());
+function noteFail() { const i = lockInfo(); i.n = (i.n || 0) + 1; if (i.n >= 5) { i.until = Date.now() + 3e5; i.n = 0; } try { localStorage.setItem(LK, JSON.stringify(i)); } catch {} }
+function clearFail() { try { localStorage.removeItem(LK); } catch {} }
+
+// ---------- خروج تلقائي عند عدم النشاط (30 دقيقة) ----------
+let idleT = null;
+function resetIdle() {
+    clearTimeout(idleT);
+    if (auth.currentUser) idleT = setTimeout(async () => { try { await signOut(auth); showToast('تم تسجيل الخروج تلقائياً لعدم النشاط.', 'info'); } catch {} }, 30 * 60 * 1000);
+}
+['click', 'keydown', 'touchstart'].forEach((ev) => document.addEventListener(ev, resetIdle, { passive: true }));
+
+function stopListeners() { unsubs.forEach((f) => f()); unsubs = []; secrets = {}; accounts = []; usersList = []; keys = []; }
+
+function startListeners() {
+    stopListeners();
+    unsubs.push(onSnapshot(collection(db, 'accounts'), (s) => {
+        accounts = s.docs.map((d) => ({ id: d.id, ...d.data() }));
+        updateUI(); loadMySecrets();
+    }, (e) => { console.error('Accounts:', e.code); showToast('تعذر تحميل الحسابات: ' + errorMessage(e), 'error'); }));
+    if (isAdmin) {
+        unsubs.push(onSnapshot(collection(db, 'secrets'), (s) => {
+            secrets = {}; s.docs.forEach((d) => { secrets[d.id] = d.data().credentials; });
+            renderAdminTab(); renderClaimed();
+        }, (e) => console.error('Secrets:', e.code)));
+        unsubs.push(onSnapshot(collection(db, 'keys'), (s) => {
+            keys = s.docs.map((d) => ({ id: d.id, ...d.data() })); renderKeys();
+        }, (e) => { console.error('Keys:', e.code); showToast('تعذر تحميل المفاتيح: ' + errorMessage(e), 'error'); }));
+        unsubs.push(onSnapshot(collection(db, 'users'), (s) => {
+            usersList = s.docs.map((d) => ({ id: d.id, ...d.data() })); renderUsers();
+        }, (e) => { console.error('Users:', e.code); showToast('تعذر تحميل قائمة المستخدمين: ' + errorMessage(e), 'error'); }));
+    }
+}
+
+// ---------- المصادقة ----------
+function setMode(m) {
+    mode = m;
+    const r = m === 'register';
+    $('authTitle').textContent = r ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+    $('authDescription').textContent = r ? 'أدخل بريدك الإلكتروني وكلمة المرور ومفتاح التفعيل الخاص بك.' : 'أدخل بريدك الإلكتروني وكلمة المرور.';
+    $('authSubmitBtn').textContent = r ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+    $('toggleAuthMode').textContent = r ? 'لديك حساب بالفعل؟ تسجيل الدخول' : 'ما عندك حساب؟ إنشاء حساب جديد';
+    $('loginPassword').autocomplete = r ? 'new-password' : 'current-password';
+    $('keyWrap').classList.toggle('hidden', !r);   // المفتاح يظهر فقط عند التسجيل
+    $('loginKey').required = r;
+    if (!r) $('loginKey').value = '';
+}
+
+// [أمان] الدور دائماً 'user' عند الإنشاء؛ المالك يُعرف من إيميله في القواعد وفي isAdmin
+const newProfile = (email, keyCode = null) => ({
+    email,
+    keyCode,
+    role: 'user',
+    dailyLimit: 30,
+    claimedTodayCount: 0,
+    lastClaimReset: new Date().toISOString(),
+    resetMs: Date.now(),
+    createdAt: new Date().toISOString()
+});
+
+$('authForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (busy) return;
+    const email = $('loginEmail').value.trim().toLowerCase(), pw = $('loginPassword').value, btn = $('authSubmitBtn');
+    busy = true; btn.disabled = true;
+    btn.textContent = mode === 'register' ? 'جاري إنشاء الحساب...' : 'جاري تسجيل الدخول...';
+    try {
+        if (mode === 'register') {
+            const key = normKey($('loginKey').value);
+            if (!KEY_RE.test(key)) throw { code: 'app/bad-key' };
+            const r = await createUserWithEmailAndPassword(auth, email, pw);
+            // ربط المفتاح بالإيميل + إنشاء الملف في عملية واحدة (إما الاثنان أو لا شيء)
+            try {
+                const batch = writeBatch(db);
+                batch.update(doc(db, 'keys', key), { usedBy: email, usedByUid: r.user.uid, usedAt: new Date().toISOString() });
+                batch.set(doc(db, 'users', r.user.uid), newProfile(email, key));
+                await batch.commit();
+            } catch (x) {
+                console.error('KeyBind:', x.code);
+                try { await deleteUser(r.user); } catch (y) { console.error(y); try { await signOut(auth); } catch {} }
+                if (['permission-denied', 'not-found'].includes(x.code)) throw { code: 'app/key-rejected' };
+                throw x;
+            }
+            let vErr = null;
+            try { await sendEmailVerification(r.user); } catch (x) { vErr = x; console.error('Verify:', x.code); }
+            try { await signOut(auth); } catch (x) { console.error(x); }
+            setMode('login'); $('loginPassword').value = '';
+            if (!vErr) showToast('تم إنشاء الحساب وربط المفتاح بإيميلك وإرسال رابط التفعيل. فعّل البريد ثم سجّل الدخول.', 'success');
+            else showToast('تم إنشاء الحساب لكن تعذر إرسال التفعيل: ' + errorMessage(vErr) + ' — استخدم «إعادة إرسال رابط التفعيل».', 'error');
+        } else {
+            // تسجيل الدخول: إيميل + كلمة مرور فقط
+            if (lockLeft() > 0) throw { code: 'app/locked' };
+            let r;
+            try { r = await signInWithEmailAndPassword(auth, email, pw); }
+            catch (x) { noteFail(); throw x; }
+            clearFail();
+            if (!r.user.emailVerified) {
+                showToast('حسابك غير مفعّل. اضغط «إعادة إرسال رابط التفعيل» بعد إدخال البريد وكلمة المرور.', 'error');
+                try { await signOut(auth); } catch (x) { console.error(x); }
+            }
+        }
+    } catch (err) {
+        console.error('Auth error:', err.code, err.message);
+        showToast(errorMessage(err), 'error');
+    } finally {
+        busy = false; btn.disabled = false;
+        btn.textContent = mode === 'register' ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+    }
+});
+
+async function loadUserData(uid, email) {
+    const ref = doc(db, 'users', uid), snap = await getDoc(ref);
+    const owner = email === MASTER_ADMIN_EMAIL.toLowerCase();
+    if (snap.exists()) {
+        me = { id: snap.id, ...snap.data() };
+        if (!me.email) me.email = email;
+    } else {
+        // [أمان] لا يُنشأ ملف تلقائياً إلا للمالك؛ غيره لازم يسجّل بمفتاح
+        if (!owner) throw { code: 'app/no-profile' };
+        const d = newProfile(email);
+        await setDoc(ref, d);
+        me = { id: uid, ...d };
+    }
+    isOwner = owner;
+    isAdmin = owner || me.role === 'admin';
+}
+
+onAuthStateChanged(auth, async (user) => {
+    if (user && user.emailVerified) {
+        userEmail = (user.email || '').toLowerCase();
+        try {
+            await loadUserData(user.uid, userEmail);
+            startListeners();
+            showApp();
+        } catch (err) {
+            console.error('Load profile:', err.code, err.message);
+            stopListeners(); userEmail = null; me = null; isAdmin = false; isOwner = false;
+            showAuth();
+            showToast('تعذر فتح حسابك: ' + errorMessage(err), 'error');
+            try { await signOut(auth); } catch {}
+        }
+    } else {
+        stopListeners(); userEmail = null; me = null; isAdmin = false; isOwner = false;
+        clearTimeout(idleT);
+        showAuth();
+    }
+});
+
+window.handleLogout = async () => {
+    try { await signOut(auth); showToast('تم تسجيل الخروج', 'info'); }
+    catch (e) { showToast('تعذر تسجيل الخروج: ' + errorMessage(e), 'error'); }
+};
+
+function showAuth() { $('authModal').classList.remove('hidden'); $('appContainer').classList.add('hidden'); }
+function showApp() {
+    $('authModal').classList.add('hidden'); $('appContainer').classList.remove('hidden');
+    $('currentUserEmailDisplay').textContent = userEmail || '';
+    const b = $('roleBadge');
+    b.textContent = isAdmin ? 'المالك / مسؤول' : 'مستخدم';
+    b.className = isAdmin ? 'text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30' : 'text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-semibold';
+    document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !isAdmin));
+    switchTab(tab);
+    updateUI();
+    resetIdle();
+}
+
+// ---------- الحد اليومي ----------
+function quota(u) {
+    const since = Number(u.resetMs) || Date.parse(u.lastClaimReset) || 0;
+    const n = Number(u.dailyLimit);
+    const limit = Number.isFinite(n) ? n : 30;
+    const expired = Date.now() - since >= DAY;
+    const used = expired ? 0 : (Number(u.claimedTodayCount) || 0);
+    return { used, limit, left: Math.max(limit - used, 0), resetAt: (!expired && used > 0) ? since + DAY : 0 };
+}
+const fmt = (ms) => {
+    const s = Math.max(0, Math.floor(ms / 1000)), p = (n) => String(n).padStart(2, '0');
+    return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
+};
+function quotaHtml(u) {
+    const q = quota(u);
+    return `المتبقي: <span class="text-emerald-400 font-bold">${q.left}</span> من <span class="text-indigo-400 font-bold">${esc(q.limit)}</span> <span class="text-slate-500">(المسحوب: ${q.used})</span><br>` +
+        (q.resetAt ? `يتجدد بعد: <span dir="ltr" class="font-mono text-amber-300 font-bold">${fmt(q.resetAt - Date.now())}</span>` : `<span class="text-emerald-400">الحد كامل (لا يوجد عد تنازلي)</span>`);
+}
+function dailyState() { if (!me) return { count: 0, limit: 30 }; const q = quota(me); return { count: q.used, limit: q.limit }; }
+function refreshLimit() {
+    const { count, limit } = dailyState();
+    $('dailyClaimCount').textContent = count;
+    $('dailyClaimMax').textContent = ` / ${limit}`;
+    return count < limit;
+}
+
+// عدّاد لايف (كل ثانية): عدّادك + عدّاد كل مستخدم في القائمة الرابعة
+setInterval(() => {
+    if (!me) return;
+    refreshLimit();
+    const q = quota(me);
+    $('myCountdown').textContent = q.resetAt ? fmt(q.resetAt - Date.now()) : '—';
+    if (isAdmin) document.querySelectorAll('[data-live-uid]').forEach((el) => {
+        const u = usersList.find((x) => x.id === el.dataset.liveUid);
+        if (u) el.innerHTML = quotaHtml(u);
+    });
+}, 1000);
+
+// ---------- العمليات ----------
+window.handleAddAccount = async (e) => {
+    e.preventDefault();
+    if (!isAdmin) return showToast('ليس لديك صلاحية إضافة الحسابات.', 'error');
+    const c = $('accCredentials'), p = $('accPlatform');
+    try {
+        const ref = doc(collection(db, 'accounts')), batch = writeBatch(db);
+        batch.set(ref, { platform: p.value, isClaimed: false, createdAt: new Date().toISOString() });
+        batch.set(doc(db, 'secrets', ref.id), { credentials: c.value.trim() });
+        await batch.commit();
+        c.value = '';
+        showToast('تمت إضافة الحساب بنجاح!', 'success');
+    } catch (err) { console.error('Add:', err.code); showToast('حدث خطأ أثناء حفظ الحساب: ' + errorMessage(err), 'error'); }
+};
+
+async function deleteAccount(id) {
+    if (!isAdmin || !confirm('هل أنت متأكد من حذف هذا الحساب نهائياً؟')) return;
+    try {
+        const batch = writeBatch(db);
+        batch.delete(doc(db, 'accounts', id)); batch.delete(doc(db, 'secrets', id));
+        await batch.commit();
+        showToast('تم حذف الحساب بنجاح', 'info');
+    } catch (err) { showToast('تعذر حذف الحساب: ' + errorMessage(err), 'error'); }
+}
+
+async function deleteClaimedAccount(id) {
+    const acc = accounts.find((a) => a.id === id);
+    if (!acc) return;
+    if (!isAdmin && acc.claimedBy !== userEmail) return showToast('لا يمكنك حذف حساب لا يخصك.', 'error');
+    if (!confirm('هل أنت متأكد من حذف هذا الحساب من قائمة المستلمة؟')) return;
+    try {
+        const batch = writeBatch(db);
+        batch.delete(doc(db, 'accounts', id)); batch.delete(doc(db, 'secrets', id));
+        await batch.commit();
+        delete secrets[id];
+        showToast('تم حذف الحساب بنجاح', 'info');
+    } catch (err) { console.error('DelClaimed:', err.code); showToast('تعذر حذف الحساب: ' + errorMessage(err), 'error'); }
+}
+
+async function claimByPlatform(platform) {
+    if (!isAdmin && !refreshLimit()) return showToast('وصلت للحد الأقصى المسموح به اليوم.', 'error');
+    const pool = accounts.filter((a) => a.platform === platform && !a.isClaimed).sort(() => Math.random() - 0.5);
+    if (!pool.length) return showToast('لا توجد حسابات متاحة لهذه المنصة حالياً.', 'error');
+    document.querySelectorAll('.claim-platform-btn').forEach((b) => (b.disabled = true));
+    try {
+        for (const acc of pool.slice(0, 5)) {
+            try {
+                const batch = writeBatch(db);
+                batch.update(doc(db, 'accounts', acc.id), { isClaimed: true, claimedBy: userEmail, claimedAt: new Date().toISOString() });
+                let upd = null;
+                if (!isAdmin) {
+                    const since = Number(me.resetMs) || Date.parse(me.lastClaimReset) || 0;
+                    const c = Number(me.claimedTodayCount) || 0;
+                    upd = (Date.now() - since >= DAY || c === 0)
+                        ? { claimedTodayCount: 1, resetMs: Date.now(), lastClaimId: acc.id }
+                        : { claimedTodayCount: c + 1, lastClaimId: acc.id };
+                    batch.update(doc(db, 'users', me.id), upd);
+                }
+                await batch.commit();
+                if (upd) Object.assign(me, upd);
+
+                let cred = '';
+                try {
+                    const s = await getDoc(doc(db, 'secrets', acc.id));
+                    cred = s.exists() ? (s.data().credentials || '') : '';
+                } catch (x) { console.error('Secret read:', x.code); }
+                if (!cred) cred = acc.credentials || '';
+                secrets[acc.id] = cred;
+
+                if (cred) {
+                    const ok = await copyText(formatCred(cred), false);
+                    if (ok) showToast('تم استلام الحساب ونسخ الإيميل والباسورد للحافظة!', 'success');
+                    else showToast('تم استلام الحساب، انسخ البيانات من القائمة الثالثة.', 'info');
+                } else {
+                    showToast('تم استلام الحساب لكن تعذر قراءة بياناته. راجع قواعد Firestore.', 'error');
+                }
+                updateUI();
+                return;
+            } catch (err) {
+                if (err.code !== 'permission-denied') throw err;
+            }
+        }
+        showToast('تعذر استلام حساب الآن. حاول مرة أخرى.', 'error');
+    } catch (err) {
+        console.error('Claim:', err.code, err.message);
+        showToast('تعذر استلام الحساب: ' + errorMessage(err), 'error');
+    } finally {
+        renderClaim();
+    }
+}
+
+async function loadMySecrets() {
+    if (isAdmin || !userEmail) return;
+    const mine = accounts.filter((a) => a.isClaimed && a.claimedBy === userEmail && secrets[a.id] === undefined);
+    if (!mine.length) return;
+    await Promise.all(mine.map(async (a) => {
+        try { const s = await getDoc(doc(db, 'secrets', a.id)); secrets[a.id] = s.exists() ? s.data().credentials : ''; }
+        catch (e) { secrets[a.id] = ''; }
+    }));
+    renderClaimed();
+}
+
+window.migrateCredentials = async () => {
+    if (!isAdmin) return;
+    const old = accounts.filter((a) => a.credentials);
+    for (let i = 0; i < old.length; i += 200) {
+        const batch = writeBatch(db);
+        old.slice(i, i + 200).forEach((a) => {
+            batch.set(doc(db, 'secrets', a.id), { credentials: a.credentials });
+            batch.update(doc(db, 'accounts', a.id), { credentials: deleteField() });
+        });
+        await batch.commit();
+    }
+    showToast(`تم نقل ${old.length} حساب إلى مجموعة secrets`, 'success');
+};
+
+async function updateUserLimit(id) {
+    if (!isAdmin) return;
+    const v = prompt('أدخل الحد اليومي الجديد لهذا المستخدم (رقم صفر أو أكبر):');
+    if (v === null || v.trim() === '') return;
+    const n = Number(v);
+    if (!Number.isInteger(n) || n < 0) return showToast('أدخل رقماً صحيحاً يساوي صفراً أو أكبر.', 'error');
+    try { await updateDoc(doc(db, 'users', id), { dailyLimit: n }); showToast('تم تحديث الحد اليومي بنجاح!', 'success'); }
+    catch (err) { showToast('تعذر تعديل الحد اليومي: ' + errorMessage(err), 'error'); }
+}
+
+async function toggleUserRole(id, role) {
+    if (!isOwner) return showToast('تغيير الصلاحيات للمالك فقط.', 'error'); // [أمان]
+    const nr = role === 'admin' ? 'user' : 'admin';
+    if (!confirm(`هل أنت متأكد من تغيير صلاحية هذا المستخدم إلى (${nr})؟`)) return;
+    try { await updateDoc(doc(db, 'users', id), { role: nr }); showToast('تم تغيير صلاحية المستخدم بنجاح!', 'success'); }
+    catch (err) { showToast('تعذر تغيير الصلاحية: ' + errorMessage(err), 'error'); }
+}
+
+// ---------- الواجهة ----------
+window.switchTab = (p) => {
+    tab = p;
+    Object.keys(PLAT).forEach((k) => {
+        const b = $('tab-' + k);
+        if (b) b.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition ' + (k === p ? 'text-indigo-400 bg-indigo-500/10 border border-indigo-500/30' : 'text-slate-400 hover:text-white');
+    });
+    renderAdminTab();
+};
+
+function updateUI() {
+    if (!me) return;
+    refreshLimit(); renderStats(); renderAdminTab(); renderClaim(); renderClaimed();
+    if (isAdmin) { renderUsers(); renderKeys(); }
+}
+
+function renderStats() {
+    const claimed = accounts.filter((a) => a.isClaimed).length;
+    $('statTotal').textContent = accounts.length;
+    $('statAvailable').textContent = accounts.length - claimed;
+    $('statClaimed').textContent = claimed;
+    $('statDiscord').textContent = accounts.filter((a) => a.platform === 'discord').length;
+    $('statRockstar').textContent = accounts.filter((a) => a.platform === 'rockstar').length;
+    $('statSteam').textContent = accounts.filter((a) => a.platform === 'steam').length;
+}
+
+function renderAdminTab() {
+    if (!isAdmin) return;
+    const list = accounts.filter((a) => a.platform === tab && !a.isClaimed);
+    $('tabContentList').innerHTML = list.length ? list.map((a) => `
+        <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">${badge(a.platform)}<span class="font-mono text-xs text-slate-300 truncate">${esc(getCred(a) || '...')}</span></div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" data-act="copy-all" data-id="${esc(a.id)}" title="نسخ الإيميل والباسورد" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition"><i class="fa-regular fa-copy text-sm"></i></button>
+                <button type="button" data-act="del" data-id="${esc(a.id)}" title="حذف" class="p-2 hover:bg-red-500/10 rounded-lg text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash text-sm"></i></button>
+            </div>
+        </div>`).join('') : empty('لا توجد حسابات متاحة حالياً');
+}
+
+function renderClaim() {
+    $('claimAccountsList').innerHTML = Object.entries(PLAT).map(([p, c]) => {
+        const n = accounts.filter((a) => a.platform === p && !a.isClaimed).length;
+        return `<button type="button" data-act="claim" data-platform="${p}" ${n === 0 ? 'disabled' : ''} class="claim-platform-btn py-5 rounded-xl border font-bold transition flex flex-col items-center gap-2 ${c.btn}"><i class="${c.icon} text-2xl"></i><span>${c.label}</span><span class="text-[11px] font-normal opacity-80">المتاح: ${n}</span></button>`;
+    }).join('');
+}
+
+function claimedAll() {
+    return accounts
+        .filter((a) => a.isClaimed && (isAdmin || a.claimedBy === userEmail))
+        .sort((x, y) => String(y.claimedAt || '').localeCompare(String(x.claimedAt || '')));
+}
+
+function renderClaimedFilters(all) {
+    const items = [['all', 'الكل'], ...Object.entries(PLAT).map(([k, v]) => [k, v.label])];
+    $('claimedFilters').innerHTML = items.map(([k, label]) => {
+        const n = k === 'all' ? all.length : all.filter((a) => a.platform === k).length;
+        const on = k === claimedFilter;
+        return `<button type="button" data-act="filter" data-filter="${k}" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${on ? 'text-indigo-300 bg-indigo-500/20 border-indigo-500/40' : 'text-slate-400 hover:text-white border-transparent'}">${label} <span class="opacity-70">(${n})</span></button>`;
+    }).join('');
+}
+
+function renderClaimed() {
+    const all = claimedAll();
+    renderClaimedFilters(all);
+    const list = claimedFilter === 'all' ? all : all.filter((a) => a.platform === claimedFilter);
+    $('claimedBadgeCount').textContent = list.length;
+
+    $('claimedHistoryList').innerHTML = list.length ? list.map((a, i) => {
+        const raw = getCred(a);
+        return `
+        <div class="p-3.5 bg-slate-900/60 rounded-xl border border-purple-500/10 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-lg bg-purple-500/20 text-purple-300 text-xs font-black border border-purple-500/30">#${i + 1}</span>
+                    ${badge(a.platform)}
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-slate-400 hidden sm:inline">مستلم بواسطة: <span class="text-purple-400 font-bold">${esc(a.claimedBy || 'مستخدم')}</span></span>
+                    <button type="button" data-act="del-claimed" data-id="${esc(a.id)}" title="حذف الحساب" class="p-1.5 hover:bg-red-500/10 rounded-md text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+                </div>
+            </div>
+            <div class="flex items-start justify-between gap-2 bg-slate-950/60 p-2.5 rounded-lg border border-slate-800">
+                <p class="font-mono text-xs text-slate-200 break-all flex-1" dir="ltr" style="text-align:left">${esc(raw || '...')}</p>
+                <button type="button" data-act="copy-all" data-id="${esc(a.id)}" title="نسخ بيانات الحساب" class="p-1.5 hover:bg-slate-800 rounded-md text-slate-400 hover:text-white transition shrink-0"><i class="fa-regular fa-copy text-xs"></i></button>
+            </div>
+        </div>`;
+    }).join('') : empty(all.length ? 'لا توجد حسابات في هذا التصنيف' : 'لم يتم استلام أي حسابات بعد');
+}
+
+function renderUsers() {
+    if (!isAdmin) return;
+    $('usersListContainer').innerHTML = usersList.length ? usersList.map((u) => `
+        <div class="p-4 bg-slate-900/70 rounded-xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2"><span class="text-sm font-bold text-white">${esc(u.email || '(بدون بريد)')}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded ${u.role === 'admin' ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-700 text-slate-300'}">${u.role === 'admin' ? 'مسؤول' : 'مستخدم'}</span></div>
+                <div data-live-uid="${esc(u.id)}" class="text-xs text-slate-400 mt-1 leading-6">${quotaHtml(u)}</div>
+                <p class="text-[11px] text-slate-500 mt-1 font-mono" dir="ltr" style="text-align:right">${esc(u.keyCode || 'بدون مفتاح')}</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" data-act="limit" data-id="${esc(u.id)}" class="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white rounded-lg text-xs font-semibold border border-indigo-500/30 transition">تعديل الحد اليومي</button>
+                ${isOwner ? `<button type="button" data-act="role" data-id="${esc(u.id)}" class="px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white rounded-lg text-xs font-semibold border border-amber-500/30 transition">${u.role === 'admin' ? 'سحب صلاحية المسؤول' : 'ترقية لمسؤول'}</button>` : ''}
+            </div>
+        </div>`).join('') : empty('لا يوجد مستخدمين مسجلين');
+}
+
+document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-act]');
+    if (!t || t.disabled) return;
+    const { act, id, platform, filter } = t.dataset;
+    const acc = accounts.find((a) => a.id === id);
+    if (act === 'claim') claimByPlatform(platform);
+    else if (act === 'filter') { claimedFilter = filter; renderClaimed(); }
+    else if (act === 'copy-email') copyText(parseCred(getCred(acc)).email, true, 'تم نسخ الإيميل!');
+    else if (act === 'copy-pass') copyText(parseCred(getCred(acc)).pass, true, 'تم نسخ الباسورد!');
+    else if (act === 'copy-all') copyText(formatCred(getCred(acc)), true, 'تم نسخ الإيميل والباسورد!');
+    else if (act === 'gen-key') generateKey();
+    else if (act === 'copy-key') copyText(id, true, 'تم نسخ المفتاح!');
+    else if (act === 'del-key') deleteKey(id);
+    else if (act === 'del') deleteAccount(id);
+    else if (act === 'del-claimed') deleteClaimedAccount(id);
+    else if (act === 'limit') updateUserLimit(id);
+    else if (act === 'role') toggleUserRole(id, usersList.find((u) => u.id === id)?.role);
+});
+
+// ---------- إعادة التفعيل ونسيان كلمة المرور ----------
+$('resendVerificationBtn').addEventListener('click', async () => {
+    const email = $('loginEmail').value.trim().toLowerCase(), pw = $('loginPassword').value, btn = $('resendVerificationBtn');
+    if (!email || !pw) return showToast('اكتب البريد الإلكتروني وكلمة المرور أولاً لإعادة إرسال رابط التفعيل.', 'error');
+    btn.disabled = true;
+    try {
+        const r = await signInWithEmailAndPassword(auth, email, pw);
+        if (r.user.emailVerified) showToast('بريدك مفعّل بالفعل. يمكنك تسجيل الدخول.', 'info');
+        else { await sendEmailVerification(r.user); showToast('تم إرسال رابط التفعيل من جديد. تفقد البريد ومجلد السبام.', 'success'); }
+        await signOut(auth);
+    } catch (err) {
+        showToast('تعذر إرسال رابط التفعيل: ' + errorMessage(err), 'error');
+        if (auth.currentUser) await signOut(auth).catch(() => {});
+    } finally { btn.disabled = false; }
+});
+
+$('forgotPasswordBtn').addEventListener('click', async () => {
+    const email = $('loginEmail').value.trim().toLowerCase(), btn = $('forgotPasswordBtn');
+    if (!email) return showToast('اكتب البريد الإلكتروني أولاً في الحقل بالأعلى.', 'error');
+    btn.disabled = true;
+    try { await sendPasswordResetEmail(auth, email); showToast('إذا كان البريد مسجلاً، فسيصل رابط استعادة كلمة المرور. تفقد السبام أيضاً.', 'success'); }
+    catch (err) { showToast('تعذر إرسال رابط الاستعادة: ' + errorMessage(err), 'error'); }
+    finally { btn.disabled = false; }
+});
+
+$('toggleAuthMode').addEventListener('click', () => setMode(mode === 'login' ? 'register' : 'login'));
+switchTab('discord');
+</script>
+</body>
+</html>
