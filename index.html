@@ -33,7 +33,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <input type="password" id="loginPassword" required minlength="6" autocomplete="current-password" placeholder="6 أحرف على الأقل" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-indigo-500 text-sm"></div>
 <div id="keyWrap" class="hidden"><label for="loginKey" class="block text-sm font-medium text-slate-300 mb-1.5">مفتاح التفعيل (Key)</label>
 <input type="text" id="loginKey" autocomplete="off" spellcheck="false" dir="ltr" maxlength="40" placeholder="xxxxx-xxxx-xxxx-xxxxx-xxx" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-indigo-500 text-sm font-mono">
-<p class="text-[11px] text-slate-500 mt-1">المفتاح يُربط بإيميلك بعد التسجيل ولا يمكن استخدامه من حساب آخر.</p></div>
+<p class="text-[11px] text-slate-500 mt-1">المفتاح يُربط بإيميلك بعد التسجيل ولا يمكن استخدامه من حساب آخر. كما يُربط حسابك ببصمة جهازك ولا يمكن فتحه من أجهزة أخرى.</p></div>
 <div class="flex justify-between items-center text-xs">
 <button type="button" id="resendVerificationBtn" class="text-indigo-400 hover:underline">إعادة إرسال رابط التفعيل؟</button>
 <button type="button" id="forgotPasswordBtn" class="text-slate-400 hover:text-indigo-400 transition">نسيت كلمة المرور؟</button>
@@ -67,21 +67,22 @@ button:disabled{opacity:.55;cursor:not-allowed}
 
 <section class="admin-only hidden">
 <h2 class="text-xl font-bold text-white flex items-center gap-2 mb-4"><i class="fa-solid fa-chart-pie text-indigo-400"></i><span>إحصائيات المنصة (المالك)</span></h2>
-<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
 <div class="glass-card p-4 rounded-2xl"><p class="text-xs text-slate-400 mb-1">إجمالي الحسابات</p><p id="statTotal" class="text-2xl font-black text-white">0</p></div>
 <div class="glass-card p-4 rounded-2xl border-emerald-500/20"><p class="text-xs text-emerald-400 mb-1">المتاحة</p><p id="statAvailable" class="text-2xl font-black text-emerald-400">0</p></div>
 <div class="glass-card p-4 rounded-2xl border-purple-500/20"><p class="text-xs text-purple-400 mb-1">المستخدمة</p><p id="statClaimed" class="text-2xl font-black text-purple-400">0</p></div>
 <div class="glass-card p-4 rounded-2xl"><p class="text-xs text-indigo-400 mb-1">دسكورد</p><p id="statDiscord" class="text-2xl font-black text-indigo-300">0</p></div>
 <div class="glass-card p-4 rounded-2xl"><p class="text-xs text-amber-400 mb-1">روكستار</p><p id="statRockstar" class="text-2xl font-black text-amber-300">0</p></div>
 <div class="glass-card p-4 rounded-2xl"><p class="text-xs text-slate-300 mb-1">ستيم</p><p id="statSteam" class="text-2xl font-black text-slate-200">0</p></div>
+<div class="glass-card p-4 rounded-2xl"><p class="text-xs text-rose-400 mb-1">Rockstar Keys</p><p id="statRockstarKey" class="text-2xl font-black text-rose-300">0</p></div>
 </div>
 </section>
 
 <section class="admin-only hidden glass-card p-6 rounded-2xl">
 <div class="flex items-center gap-2 mb-4"><div class="p-2 bg-indigo-500/10 rounded-lg text-indigo-400"><i class="fa-solid fa-plus-circle text-lg"></i></div><div><h2 class="text-lg font-bold text-white">إضافة حساب جديد (خاص بالمالك)</h2><p class="text-xs text-slate-400">قم بإضافة بيانات الحساب المتاح وتحديد منصته</p></div></div>
 <form onsubmit="handleAddAccount(event)" class="grid grid-cols-1 md:grid-cols-12 gap-4">
-<div class="md:col-span-6"><label for="accCredentials" class="block text-xs text-slate-300 mb-1">بيانات الحساب (الإيميل:الباسورد)</label><input type="text" id="accCredentials" required placeholder="مثال: user@mail.com:password123" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"></div>
-<div class="md:col-span-4"><label for="accPlatform" class="block text-xs text-slate-300 mb-1">نوع المنصة</label><select id="accPlatform" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"><option value="discord">دسكورد (Discord)</option><option value="rockstar">روكستار (Rockstar)</option><option value="steam">ستيم (Steam)</option></select></div>
+<div class="md:col-span-6"><label for="accCredentials" class="block text-xs text-slate-300 mb-1">بيانات الحساب (الإيميل:الباسورد) أو الكي</label><input type="text" id="accCredentials" required placeholder="مثال: user@mail.com:password123" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"></div>
+<div class="md:col-span-4"><label for="accPlatform" class="block text-xs text-slate-300 mb-1">نوع المنصة</label><select id="accPlatform" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"><option value="discord">دسكورد (Discord)</option><option value="rockstar">روكستار (Rockstar)</option><option value="steam">ستيم (Steam)</option><option value="rockstar_key">Rockstar Keys (Key)</option></select></div>
 <div class="md:col-span-2 flex items-end"><button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg transition flex items-center justify-center gap-2"><i class="fa-solid fa-plus text-xs"></i><span>حفظ الحساب</span></button></div>
 </form>
 </section>
@@ -98,14 +99,15 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <div class="lg:col-span-7 space-y-6">
 <div class="admin-only hidden glass-card p-6 rounded-2xl space-y-4">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><h2 class="text-lg font-bold text-white">القائمة الأولى: الحسابات المتاحة (خاص بالمالك)</h2>
-<div class="flex bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+<div class="flex flex-wrap bg-slate-900/80 p-1 rounded-xl border border-slate-800">
 <button onclick="switchTab('discord')" id="tab-discord" class="px-3 py-1.5 rounded-lg text-xs font-semibold">دسكورد</button>
 <button onclick="switchTab('rockstar')" id="tab-rockstar" class="px-3 py-1.5 rounded-lg text-xs font-semibold">روكستار</button>
 <button onclick="switchTab('steam')" id="tab-steam" class="px-3 py-1.5 rounded-lg text-xs font-semibold">ستيم</button>
+<button onclick="switchTab('rockstar_key')" id="tab-rockstar_key" class="px-3 py-1.5 rounded-lg text-xs font-semibold">Rockstar Keys</button>
 </div></div>
 <div id="tabContentList" class="space-y-3 min-h-[180px] max-h-[400px] overflow-y-auto"></div>
 </div>
-<div class="glass-card p-6 rounded-2xl space-y-4"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-download text-emerald-400"></i><span>سحب واستلام الحسابات</span></h2><p class="text-xs text-slate-400">اختر المنصة وسيتم سحب حساب لك عشوائياً ونسخ الإيميل والباسورد.</p><div id="claimAccountsList" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div></div>
+<div class="glass-card p-6 rounded-2xl space-y-4"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-download text-emerald-400"></i><span>سحب واستلام الحسابات</span></h2><p class="text-xs text-slate-400">اختر المنصة وسيتم سحب حساب لك عشوائياً ونسخ الإيميل والباسورد.</p><div id="claimAccountsList" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div></div>
 </div>
 <div class="lg:col-span-5"><div class="glass-card p-6 rounded-2xl space-y-4 h-full flex flex-col">
 <div class="flex items-center justify-between border-b border-slate-800 pb-3"><h2 class="text-lg font-bold text-white">القائمة الثالثة: الحسابات المستلمة</h2><span id="claimedBadgeCount" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300">0</span></div>
@@ -140,10 +142,10 @@ auth.languageCode = 'ar';
 
 const MASTER_ADMIN_EMAIL = "mohammed114324@gmail.com";
 const DAY = 864e5;
+const MAX_DEVICES = 2; // عدد الأجهزة المسموح بها لكل مستخدم
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-// الحالة (داخل الوحدة فقط، غير متاحة من الـ Console)
 let userEmail = null, me = null, isAdmin = false, isOwner = false, tab = 'discord';
 let accounts = [], usersList = [], secrets = {}, keys = [];
 let mode = 'login', busy = false;
@@ -153,7 +155,8 @@ let unsubs = [];
 const PLAT = {
     discord:  { label: 'دسكورد', icon: 'fa-brands fa-discord', badge: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', btn: 'bg-indigo-500/10 hover:bg-indigo-500 text-indigo-300 hover:text-white border-indigo-500/30' },
     rockstar: { label: 'روكستار', icon: 'fa-solid fa-r', badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20', btn: 'bg-amber-500/10 hover:bg-amber-500 text-amber-300 hover:text-black border-amber-500/30' },
-    steam:    { label: 'ستيم', icon: 'fa-brands fa-steam', badge: 'bg-slate-700/50 text-slate-300 border-slate-600/30', btn: 'bg-slate-700/40 hover:bg-slate-600 text-slate-200 border-slate-600/40' }
+    steam:    { label: 'ستيم', icon: 'fa-brands fa-steam', badge: 'bg-slate-700/50 text-slate-300 border-slate-600/30', btn: 'bg-slate-700/40 hover:bg-slate-600 text-slate-200 border-slate-600/40' },
+    rockstar_key: { label: 'Rockstar Keys', icon: 'fa-solid fa-key', badge: 'bg-rose-500/10 text-rose-400 border-rose-500/20', btn: 'bg-rose-500/10 hover:bg-rose-500 text-rose-300 hover:text-white border-rose-500/30' }
 };
 const badge = (p) => PLAT[p] ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border ${PLAT[p].badge}"><i class="${PLAT[p].icon}"></i> ${PLAT[p].label}</span>` : '';
 const empty = (t) => `<div class="text-center py-8 border border-dashed border-slate-800 rounded-xl"><p class="text-xs text-slate-500">${t}</p></div>`;
@@ -163,6 +166,7 @@ const ERRORS = {
     'app/key-rejected': 'المفتاح غير صالح أو مستخدم مسبقاً من حساب آخر. لم يتم إنشاء الحساب.',
     'app/no-profile': 'حسابك غير مرتبط بمفتاح تفعيل. تواصل مع المالك.',
     'app/locked': 'محاولات خاطئة كثيرة. انتظر 5 دقائق ثم حاول مرة أخرى.',
+    'app/device-locked': 'هذا الحساب مرتبط بجهاز آخر ولا يمكن فتحه من هذا الجهاز. تواصل مع المالك لتصفير الأجهزة.',
     'auth/email-already-in-use': 'هذا البريد مسجل مسبقاً. سجّل الدخول بدلاً من إنشاء حساب جديد.',
     'auth/invalid-email': 'صيغة البريد الإلكتروني غير صحيحة.',
     'auth/invalid-credential': 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
@@ -199,9 +203,8 @@ async function copyText(v, toast = true, msg = 'تم نسخ البيانات ل�
     catch (e) { console.error('Clipboard error:', e); showToast('تعذر النسخ التلقائي. تأكد أن الموقع يعمل عبر HTTPS أو localhost.', 'error'); return false; }
 }
 
-// ---------- أدوات بيانات الحساب (الإيميل + الباسورد) ----------
+// ---------- بيانات الحساب ----------
 function getCred(a) { return (a && (secrets[a.id] || a.credentials)) || ''; }
-
 function parseCred(raw) {
     raw = String(raw || '').trim();
     const em = raw.match(/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i);
@@ -219,7 +222,7 @@ function parseCred(raw) {
 }
 function formatCred(raw) { return String(raw || '').trim(); }
 
-// ---------- المفاتيح (Keys) ----------
+// ---------- المفاتيح ----------
 const KEY_RE = /^[a-z0-9]{5}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{5}-[a-z0-9]{3}$/;
 const normKey = (s) => String(s || '').trim().toLowerCase();
 function randKey() {
@@ -227,7 +230,7 @@ function randKey() {
     const pick = (n) => {
         let s = '';
         while (s.length < n) {
-            for (const b of crypto.getRandomValues(new Uint8Array(n * 2))) { if (b < 252 && s.length < n) s += cs[b % 36]; } // بدون انحياز
+            for (const b of crypto.getRandomValues(new Uint8Array(n * 2))) { if (b < 252 && s.length < n) s += cs[b % 36]; }
         }
         return s;
     };
@@ -266,20 +269,52 @@ function renderKeys() {
         </div>`).join('') : empty('لا توجد مفاتيح بعد. اضغط «توليد كي جديد»');
 }
 
-// ---------- حماية من تخمين كلمة المرور (طبقة إضافية فوق حماية Firebase) ----------
+// ---------- حماية من تخمين كلمة المرور ----------
 const LK = 'zzx_lock';
 const lockInfo = () => { try { return JSON.parse(localStorage.getItem(LK)) || { n: 0, until: 0 }; } catch { return { n: 0, until: 0 }; } };
 const lockLeft = () => Math.max(0, (lockInfo().until || 0) - Date.now());
 function noteFail() { const i = lockInfo(); i.n = (i.n || 0) + 1; if (i.n >= 5) { i.until = Date.now() + 3e5; i.n = 0; } try { localStorage.setItem(LK, JSON.stringify(i)); } catch {} }
 function clearFail() { try { localStorage.removeItem(LK); } catch {} }
 
-// ---------- خروج تلقائي عند عدم النشاط (30 دقيقة) ----------
+// ---------- خروج تلقائي (30 دقيقة) ----------
 let idleT = null;
 function resetIdle() {
     clearTimeout(idleT);
     if (auth.currentUser) idleT = setTimeout(async () => { try { await signOut(auth); showToast('تم تسجيل الخروج تلقائياً لعدم النشاط.', 'info'); } catch {} }, 30 * 60 * 1000);
 }
 ['click', 'keydown', 'touchstart'].forEach((ev) => document.addEventListener(ev, resetIdle, { passive: true }));
+
+// ---------- بصمة الجهاز (ربط الحساب بالجهاز) ----------
+async function deviceHash() {
+    let gl = '';
+    try {
+        const g = document.createElement('canvas').getContext('webgl');
+        const x = g.getExtension('WEBGL_debug_renderer_info');
+        gl = x ? g.getParameter(x.UNMASKED_RENDERER_WEBGL) : '';
+    } catch {}
+    const raw = [navigator.platform, screen.width + 'x' + screen.height, screen.colorDepth,
+        Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.hardwareConcurrency,
+        navigator.deviceMemory || '', navigator.language, gl].join('|');
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+async function enforceDevice(ref) {
+    if (isOwner) return; // المالك مستثنى
+    const h = await deviceHash();
+    const devs = Array.isArray(me.devices) ? [...me.devices] : [];
+    if (devs.some((d) => d.h === h)) return;
+    if (devs.length >= MAX_DEVICES) throw { code: 'app/device-locked' };
+    devs.push({ h, ua: navigator.userAgent.slice(0, 120), at: new Date().toISOString() });
+    await updateDoc(ref, { devices: devs });
+    me.devices = devs;
+}
+async function resetDevices(id) {
+    if (!isAdmin) return;
+    const u = usersList.find((x) => x.id === id);
+    if (!confirm('تصفير (Reset Hardware) أجهزة ' + (u?.email || 'هذا المستخدم') + '؟ سيتمكن من الدخول من جهاز جديد وسيُربط به.')) return;
+    try { await updateDoc(doc(db, 'users', id), { devices: [] }); showToast('تم تصفير أجهزة المستخدم بنجاح', 'success'); }
+    catch (err) { showToast('تعذر تصفير الأجهزة: ' + errorMessage(err), 'error'); }
+}
 
 function stopListeners() { unsubs.forEach((f) => f()); unsubs = []; secrets = {}; accounts = []; usersList = []; keys = []; }
 
@@ -312,12 +347,11 @@ function setMode(m) {
     $('authSubmitBtn').textContent = r ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
     $('toggleAuthMode').textContent = r ? 'لديك حساب بالفعل؟ تسجيل الدخول' : 'ما عندك حساب؟ إنشاء حساب جديد';
     $('loginPassword').autocomplete = r ? 'new-password' : 'current-password';
-    $('keyWrap').classList.toggle('hidden', !r);   // المفتاح يظهر فقط عند التسجيل
+    $('keyWrap').classList.toggle('hidden', !r);
     $('loginKey').required = r;
     if (!r) $('loginKey').value = '';
 }
 
-// [أمان] الدور دائماً 'user' عند الإنشاء؛ المالك يُعرف من إيميله في القواعد وفي isAdmin
 const newProfile = (email, keyCode = null) => ({
     email,
     keyCode,
@@ -326,6 +360,7 @@ const newProfile = (email, keyCode = null) => ({
     claimedTodayCount: 0,
     lastClaimReset: new Date().toISOString(),
     resetMs: Date.now(),
+    devices: [],
     createdAt: new Date().toISOString()
 });
 
@@ -340,7 +375,6 @@ $('authForm').addEventListener('submit', async (e) => {
             const key = normKey($('loginKey').value);
             if (!KEY_RE.test(key)) throw { code: 'app/bad-key' };
             const r = await createUserWithEmailAndPassword(auth, email, pw);
-            // ربط المفتاح بالإيميل + إنشاء الملف في عملية واحدة (إما الاثنان أو لا شيء)
             try {
                 const batch = writeBatch(db);
                 batch.update(doc(db, 'keys', key), { usedBy: email, usedByUid: r.user.uid, usedAt: new Date().toISOString() });
@@ -356,10 +390,9 @@ $('authForm').addEventListener('submit', async (e) => {
             try { await sendEmailVerification(r.user); } catch (x) { vErr = x; console.error('Verify:', x.code); }
             try { await signOut(auth); } catch (x) { console.error(x); }
             setMode('login'); $('loginPassword').value = '';
-            if (!vErr) showToast('تم إنشاء الحساب وربط المفتاح بإيميلك وإرسال رابط التفعيل. فعّل البريد ثم سجّل الدخول.', 'success');
+            if (!vErr) showToast('تم إنشاء الحساب وربط المفتاح بإيميلك وإرسال رابط التفعيل. فعّل البريد ثم سجّل الدخول (سيُربط حسابك بجهازك عند أول دخول).', 'success');
             else showToast('تم إنشاء الحساب لكن تعذر إرسال التفعيل: ' + errorMessage(vErr) + ' — استخدم «إعادة إرسال رابط التفعيل».', 'error');
         } else {
-            // تسجيل الدخول: إيميل + كلمة مرور فقط
             if (lockLeft() > 0) throw { code: 'app/locked' };
             let r;
             try { r = await signInWithEmailAndPassword(auth, email, pw); }
@@ -386,7 +419,6 @@ async function loadUserData(uid, email) {
         me = { id: snap.id, ...snap.data() };
         if (!me.email) me.email = email;
     } else {
-        // [أمان] لا يُنشأ ملف تلقائياً إلا للمالك؛ غيره لازم يسجّل بمفتاح
         if (!owner) throw { code: 'app/no-profile' };
         const d = newProfile(email);
         await setDoc(ref, d);
@@ -394,6 +426,7 @@ async function loadUserData(uid, email) {
     }
     isOwner = owner;
     isAdmin = owner || me.role === 'admin';
+    await enforceDevice(ref); // ربط الحساب بالجهاز
 }
 
 onAuthStateChanged(auth, async (user) => {
@@ -461,7 +494,6 @@ function refreshLimit() {
     return count < limit;
 }
 
-// عدّاد لايف (كل ثانية): عدّادك + عدّاد كل مستخدم في القائمة الرابعة
 setInterval(() => {
     if (!me) return;
     refreshLimit();
@@ -544,7 +576,7 @@ async function claimByPlatform(platform) {
 
                 if (cred) {
                     const ok = await copyText(formatCred(cred), false);
-                    if (ok) showToast('تم استلام الحساب ونسخ الإيميل والباسورد للحافظة!', 'success');
+                    if (ok) showToast('تم استلام الحساب ونسخ البيانات للحافظة!', 'success');
                     else showToast('تم استلام الحساب، انسخ البيانات من القائمة الثالثة.', 'info');
                 } else {
                     showToast('تم استلام الحساب لكن تعذر قراءة بياناته. راجع قواعد Firestore.', 'error');
@@ -600,7 +632,7 @@ async function updateUserLimit(id) {
 }
 
 async function toggleUserRole(id, role) {
-    if (!isOwner) return showToast('تغيير الصلاحيات للمالك فقط.', 'error'); // [أمان]
+    if (!isOwner) return showToast('تغيير الصلاحيات للمالك فقط.', 'error');
     const nr = role === 'admin' ? 'user' : 'admin';
     if (!confirm(`هل أنت متأكد من تغيير صلاحية هذا المستخدم إلى (${nr})؟`)) return;
     try { await updateDoc(doc(db, 'users', id), { role: nr }); showToast('تم تغيير صلاحية المستخدم بنجاح!', 'success'); }
@@ -625,12 +657,14 @@ function updateUI() {
 
 function renderStats() {
     const claimed = accounts.filter((a) => a.isClaimed).length;
+    const cnt = (p) => accounts.filter((a) => a.platform === p).length;
     $('statTotal').textContent = accounts.length;
     $('statAvailable').textContent = accounts.length - claimed;
     $('statClaimed').textContent = claimed;
-    $('statDiscord').textContent = accounts.filter((a) => a.platform === 'discord').length;
-    $('statRockstar').textContent = accounts.filter((a) => a.platform === 'rockstar').length;
-    $('statSteam').textContent = accounts.filter((a) => a.platform === 'steam').length;
+    $('statDiscord').textContent = cnt('discord');
+    $('statRockstar').textContent = cnt('rockstar');
+    $('statSteam').textContent = cnt('steam');
+    $('statRockstarKey').textContent = cnt('rockstar_key');
 }
 
 function renderAdminTab() {
@@ -640,7 +674,7 @@ function renderAdminTab() {
         <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">${badge(a.platform)}<span class="font-mono text-xs text-slate-300 truncate">${esc(getCred(a) || '...')}</span></div>
             <div class="flex items-center gap-2 shrink-0">
-                <button type="button" data-act="copy-all" data-id="${esc(a.id)}" title="نسخ الإيميل والباسورد" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition"><i class="fa-regular fa-copy text-sm"></i></button>
+                <button type="button" data-act="copy-all" data-id="${esc(a.id)}" title="نسخ البيانات" class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition"><i class="fa-regular fa-copy text-sm"></i></button>
                 <button type="button" data-act="del" data-id="${esc(a.id)}" title="حذف" class="p-2 hover:bg-red-500/10 rounded-lg text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash text-sm"></i></button>
             </div>
         </div>`).join('') : empty('لا توجد حسابات متاحة حالياً');
@@ -698,19 +732,24 @@ function renderClaimed() {
 
 function renderUsers() {
     if (!isAdmin) return;
-    $('usersListContainer').innerHTML = usersList.length ? usersList.map((u) => `
+    $('usersListContainer').innerHTML = usersList.length ? usersList.map((u) => {
+        const dn = Array.isArray(u.devices) ? u.devices.length : 0;
+        return `
         <div class="p-4 bg-slate-900/70 rounded-xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <div class="flex items-center gap-2"><span class="text-sm font-bold text-white">${esc(u.email || '(بدون بريد)')}</span>
                 <span class="text-[10px] px-2 py-0.5 rounded ${u.role === 'admin' ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-700 text-slate-300'}">${u.role === 'admin' ? 'مسؤول' : 'مستخدم'}</span></div>
                 <div data-live-uid="${esc(u.id)}" class="text-xs text-slate-400 mt-1 leading-6">${quotaHtml(u)}</div>
+                <p class="text-[11px] text-slate-500 mt-1"><i class="fa-solid fa-microchip"></i> الأجهزة المرتبطة: <span class="${dn ? 'text-sky-300' : 'text-slate-500'} font-bold">${dn}/${MAX_DEVICES}</span></p>
                 <p class="text-[11px] text-slate-500 mt-1 font-mono" dir="ltr" style="text-align:right">${esc(u.keyCode || 'بدون مفتاح')}</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="button" data-act="reset-dev" data-id="${esc(u.id)}" class="px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white rounded-lg text-xs font-semibold border border-rose-500/30 transition"><i class="fa-solid fa-rotate-left"></i> Reset Hardware</button>
                 <button type="button" data-act="limit" data-id="${esc(u.id)}" class="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white rounded-lg text-xs font-semibold border border-indigo-500/30 transition">تعديل الحد اليومي</button>
                 ${isOwner ? `<button type="button" data-act="role" data-id="${esc(u.id)}" class="px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white rounded-lg text-xs font-semibold border border-amber-500/30 transition">${u.role === 'admin' ? 'سحب صلاحية المسؤول' : 'ترقية لمسؤول'}</button>` : ''}
             </div>
-        </div>`).join('') : empty('لا يوجد مستخدمين مسجلين');
+        </div>`;
+    }).join('') : empty('لا يوجد مستخدمين مسجلين');
 }
 
 document.addEventListener('click', (e) => {
@@ -722,13 +761,14 @@ document.addEventListener('click', (e) => {
     else if (act === 'filter') { claimedFilter = filter; renderClaimed(); }
     else if (act === 'copy-email') copyText(parseCred(getCred(acc)).email, true, 'تم نسخ الإيميل!');
     else if (act === 'copy-pass') copyText(parseCred(getCred(acc)).pass, true, 'تم نسخ الباسورد!');
-    else if (act === 'copy-all') copyText(formatCred(getCred(acc)), true, 'تم نسخ الإيميل والباسورد!');
+    else if (act === 'copy-all') copyText(formatCred(getCred(acc)), true, 'تم نسخ البيانات!');
     else if (act === 'gen-key') generateKey();
     else if (act === 'copy-key') copyText(id, true, 'تم نسخ المفتاح!');
     else if (act === 'del-key') deleteKey(id);
     else if (act === 'del') deleteAccount(id);
     else if (act === 'del-claimed') deleteClaimedAccount(id);
     else if (act === 'limit') updateUserLimit(id);
+    else if (act === 'reset-dev') resetDevices(id);
     else if (act === 'role') toggleUserRole(id, usersList.find((u) => u.id === id)?.role);
 });
 
