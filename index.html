@@ -74,15 +74,15 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <div class="glass-card p-4 rounded-2xl"><p class="text-xs text-indigo-400 mb-1">دسكورد</p><p id="statDiscord" class="text-2xl font-black text-indigo-300">0</p></div>
 <div class="glass-card p-4 rounded-2xl"><p class="text-xs text-amber-400 mb-1">روكستار</p><p id="statRockstar" class="text-2xl font-black text-amber-300">0</p></div>
 <div class="glass-card p-4 rounded-2xl"><p class="text-xs text-slate-300 mb-1">ستيم</p><p id="statSteam" class="text-2xl font-black text-slate-200">0</p></div>
-<div class="glass-card p-4 rounded-2xl"><p class="text-xs text-rose-400 mb-1">Rockstar Keys</p><p id="statRockstarKey" class="text-2xl font-black text-rose-300">0</p></div>
+<div class="glass-card p-4 rounded-2xl"><p class="text-xs text-rose-400 mb-1">كي روكستار</p><p id="statRockstarKey" class="text-2xl font-black text-rose-300">0</p></div>
 </div>
 </section>
 
 <section class="admin-only hidden glass-card p-6 rounded-2xl">
 <div class="flex items-center gap-2 mb-4"><div class="p-2 bg-indigo-500/10 rounded-lg text-indigo-400"><i class="fa-solid fa-plus-circle text-lg"></i></div><div><h2 class="text-lg font-bold text-white">إضافة حساب جديد (خاص بالمالك)</h2><p class="text-xs text-slate-400">قم بإضافة بيانات الحساب المتاح وتحديد منصته</p></div></div>
 <form onsubmit="handleAddAccount(event)" class="grid grid-cols-1 md:grid-cols-12 gap-4">
-<div class="md:col-span-6"><label for="accCredentials" class="block text-xs text-slate-300 mb-1">بيانات الحساب (الإيميل:الباسورد) أو الكي</label><input type="text" id="accCredentials" required placeholder="مثال: user@mail.com:password123" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"></div>
-<div class="md:col-span-4"><label for="accPlatform" class="block text-xs text-slate-300 mb-1">نوع المنصة</label><select id="accPlatform" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"><option value="discord">دسكورد (Discord)</option><option value="rockstar">روكستار (Rockstar)</option><option value="steam">ستيم (Steam)</option><option value="rockstar_key">Rockstar Keys (Key)</option></select></div>
+<div class="md:col-span-6"><label for="accCredentials" class="block text-xs text-slate-300 mb-1">بيانات الحسابات: كل سطر حساب (الإيميل:الباسورد) أو كي</label><textarea id="accCredentials" required rows="5" dir="ltr" spellcheck="false" placeholder="user1@mail.com:password1&#10;user2@mail.com:password2&#10;user3@mail.com:password3" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-indigo-500 resize-y"></textarea></div>
+<div class="md:col-span-4"><label for="accPlatform" class="block text-xs text-slate-300 mb-1">نوع المنصة</label><select id="accPlatform" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"><option value="discord">دسكورد (Discord)</option><option value="rockstar">روكستار (Rockstar)</option><option value="steam">ستيم (Steam)</option><option value="rockstar_key">كي روكستار (Key)</option></select></div>
 <div class="md:col-span-2 flex items-end"><button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg transition flex items-center justify-center gap-2"><i class="fa-solid fa-plus text-xs"></i><span>حفظ الحساب</span></button></div>
 </form>
 </section>
@@ -103,7 +103,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <button onclick="switchTab('discord')" id="tab-discord" class="px-3 py-1.5 rounded-lg text-xs font-semibold">دسكورد</button>
 <button onclick="switchTab('rockstar')" id="tab-rockstar" class="px-3 py-1.5 rounded-lg text-xs font-semibold">روكستار</button>
 <button onclick="switchTab('steam')" id="tab-steam" class="px-3 py-1.5 rounded-lg text-xs font-semibold">ستيم</button>
-<button onclick="switchTab('rockstar_key')" id="tab-rockstar_key" class="px-3 py-1.5 rounded-lg text-xs font-semibold">Rockstar Keys</button>
+<button onclick="switchTab('rockstar_key')" id="tab-rockstar_key" class="px-3 py-1.5 rounded-lg text-xs font-semibold">كي روكستار</button>
 </div></div>
 <div id="tabContentList" class="space-y-3 min-h-[180px] max-h-[400px] overflow-y-auto"></div>
 </div>
@@ -125,6 +125,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app-check.js";
 import { getFirestore, collection, doc, updateDoc, onSnapshot, getDoc, setDoc, writeBatch, deleteField, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signOut, onAuthStateChanged, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
@@ -137,12 +138,20 @@ const app = initializeApp({
     appId: "1:575709545954:web:b2e9b532148175c1b1e5bb",
     measurementId: "G-Z03B5ND06F"
 });
+// ---------- App Check (reCAPTCHA v3) ----------
+// ضع هنا مفتاح الموقع (Site key) العلني فقط. المفتاح السري لا يوضع في الكود أبداً.
+const RECAPTCHA_SITE_KEY = '6Le8w_ktAAAAAMhQ2ZC3Hq-bQD8adN0Ut34OuAEJ';
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') self.FIREBASE_APPCHECK_DEBUG_TOKEN = true; // للتجربة المحلية فقط
+if (RECAPTCHA_SITE_KEY && !RECAPTCHA_SITE_KEY.startsWith('PUT_')) {
+    try { initializeAppCheck(app, { provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY), isTokenAutoRefreshEnabled: true }); }
+    catch (e) { console.error('AppCheck:', e); }
+}
 const db = getFirestore(app), auth = getAuth(app);
 auth.languageCode = 'ar';
 
 const MASTER_ADMIN_EMAIL = "mohammed114324@gmail.com";
 const DAY = 864e5;
-const MAX_DEVICES = 2; // عدد الأجهزة المسموح بها لكل مستخدم
+const MAX_DEVICES = 1; // عدد الأجهزة المسموح بها لكل مستخدم (يجب أن يطابق القيمة في قواعد Firestore)
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -156,7 +165,7 @@ const PLAT = {
     discord:  { label: 'دسكورد', icon: 'fa-brands fa-discord', badge: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', btn: 'bg-indigo-500/10 hover:bg-indigo-500 text-indigo-300 hover:text-white border-indigo-500/30' },
     rockstar: { label: 'روكستار', icon: 'fa-solid fa-r', badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20', btn: 'bg-amber-500/10 hover:bg-amber-500 text-amber-300 hover:text-black border-amber-500/30' },
     steam:    { label: 'ستيم', icon: 'fa-brands fa-steam', badge: 'bg-slate-700/50 text-slate-300 border-slate-600/30', btn: 'bg-slate-700/40 hover:bg-slate-600 text-slate-200 border-slate-600/40' },
-    rockstar_key: { label: 'Rockstar Keys', icon: 'fa-solid fa-key', badge: 'bg-rose-500/10 text-rose-400 border-rose-500/20', btn: 'bg-rose-500/10 hover:bg-rose-500 text-rose-300 hover:text-white border-rose-500/30' }
+    rockstar_key: { label: 'كي روكستار', icon: 'fa-solid fa-key', badge: 'bg-rose-500/10 text-rose-400 border-rose-500/20', btn: 'bg-rose-500/10 hover:bg-rose-500 text-rose-300 hover:text-white border-rose-500/30' }
 };
 const badge = (p) => PLAT[p] ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border ${PLAT[p].badge}"><i class="${PLAT[p].icon}"></i> ${PLAT[p].label}</span>` : '';
 const empty = (t) => `<div class="text-center py-8 border border-dashed border-slate-800 rounded-xl"><p class="text-xs text-slate-500">${t}</p></div>`;
@@ -285,6 +294,13 @@ function resetIdle() {
 ['click', 'keydown', 'touchstart'].forEach((ev) => document.addEventListener(ev, resetIdle, { passive: true }));
 
 // ---------- بصمة الجهاز (ربط الحساب بالجهاز) ----------
+function deviceId() {
+    try {
+        let i = localStorage.getItem('zzx_did');
+        if (!i) { i = crypto.randomUUID(); localStorage.setItem('zzx_did', i); }
+        return i;
+    } catch { return 'noid'; }
+}
 async function deviceHash() {
     let gl = '';
     try {
@@ -294,7 +310,7 @@ async function deviceHash() {
     } catch {}
     const raw = [navigator.platform, screen.width + 'x' + screen.height, screen.colorDepth,
         Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.hardwareConcurrency,
-        navigator.deviceMemory || '', navigator.language, gl].join('|');
+        navigator.deviceMemory || '', navigator.language, gl, deviceId()].join('|');
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
     return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
@@ -510,14 +526,31 @@ window.handleAddAccount = async (e) => {
     e.preventDefault();
     if (!isAdmin) return showToast('ليس لديك صلاحية إضافة الحسابات.', 'error');
     const c = $('accCredentials'), p = $('accPlatform');
+    const btn = e.target.querySelector('button[type="submit"]');
+    const lines = c.value.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    const existing = new Set(accounts.filter((a) => a.platform === p.value).map((a) => getCred(a)).filter(Boolean));
+    const uniq = [...new Set(lines)].filter((l) => !existing.has(l));
+    const skipped = lines.length - uniq.length;
+    if (!uniq.length) return showToast(lines.length ? 'كل الأسطر مكررة أو موجودة مسبقاً.' : 'اكتب حساباً واحداً على الأقل.', 'error');
+    if (btn) btn.disabled = true;
+    let done = 0;
     try {
-        const ref = doc(collection(db, 'accounts')), batch = writeBatch(db);
-        batch.set(ref, { platform: p.value, isClaimed: false, createdAt: new Date().toISOString() });
-        batch.set(doc(db, 'secrets', ref.id), { credentials: c.value.trim() });
-        await batch.commit();
+        for (let i = 0; i < uniq.length; i += 200) { // كل حساب = كتابتان، والحد 500 كتابة في الدفعة
+            const batch = writeBatch(db), part = uniq.slice(i, i + 200);
+            part.forEach((cred) => {
+                const ref = doc(collection(db, 'accounts'));
+                batch.set(ref, { platform: p.value, isClaimed: false, createdAt: new Date().toISOString() });
+                batch.set(doc(db, 'secrets', ref.id), { credentials: cred });
+            });
+            await batch.commit();
+            done += part.length;
+        }
         c.value = '';
-        showToast('تمت إضافة الحساب بنجاح!', 'success');
-    } catch (err) { console.error('Add:', err.code); showToast('حدث خطأ أثناء حفظ الحساب: ' + errorMessage(err), 'error'); }
+        showToast(`تمت إضافة ${done} حساب بنجاح!` + (skipped ? ` (تم تجاهل ${skipped} مكرر)` : ''), 'success');
+    } catch (err) {
+        console.error('Add:', err.code);
+        showToast(`تمت إضافة ${done} من ${uniq.length}. توقف بسبب: ` + errorMessage(err), 'error');
+    } finally { if (btn) btn.disabled = false; }
 };
 
 async function deleteAccount(id) {
